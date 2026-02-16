@@ -1,6 +1,6 @@
 import SearchForm from "@/components/SearchForm";
 import StartupCard, { StartupTypeCard } from "@/components/StartupCard";
-import { STARTUPS_QUERY } from "../../lib/queries";
+import { STARTUPS_QUERY } from "@/sanity/lib/queries";
 import { sanityFetch, SanityLive } from "@/sanity/lib/live";
 import { auth } from "@/auth";
 
@@ -14,39 +14,41 @@ export default async function Home({
 
   const session = await auth();
 
-  console.log(session?.id);
+  console.log(session?.user?.id);
 
   const { data: posts } = await sanityFetch({ query: STARTUPS_QUERY, params });
 
-
   return (
     <>
-    
-    <section className="pink_container">
-      {/* <h1 className="tag">pitch, vote and grow</h1> */}
-      <h1 className="heading">pitch your startup, <br />connect with entrepreneurs</h1>
-      <p className="sub-heading !max-w-3xl">Submit Ideas, Vote on pitches, and Get Noticed In VirtualCompetitions.</p>
+      <section className="pink_container">
+        <h1 className="heading">
+          Pitch Your Startup, <br />
+          Connect With Entrepreneurs
+        </h1>
 
+        <p className="sub-heading !max-w-3xl">
+          Submit Ideas, Vote on Pitches, and Get Noticed in Virtual
+          Competitions.
+        </p>
 
-    <SearchForm query={query} />
+        <SearchForm query={query} />
+      </section>
 
-    </section>
+      <section className="section_container">
+        <p className="text-30-semibold">
+          {query ? `Search results for "${query}"` : "All Startups"}
+        </p>
 
-    <section className="section_container">
-      <p className="text-30-semibold">
-        {query ? 'Showing results for ' + `"${query}"` : `All Startups`}
-      </p>
-    </section>
-
-    <ul className="mt-7 card_grid">
-  {posts?.length > 0 ? (
-    posts.map((post: StartupTypeCard) => (
-      <StartupCard key={post._id} post={post as StartupTypeCard} />
-    ))
-    ) : (
-      <p className="no-results">No startups found</p>
-    )}
-  </ul>
+        <ul className="mt-7 card_grid">
+          {posts?.length > 0 ? (
+            posts.map((post: StartupTypeCard) => (
+              <StartupCard key={post?._id} post={post} />
+            ))
+          ) : (
+            <p className="no-results">No startups found</p>
+          )}
+        </ul>
+      </section>
 
       <SanityLive />
     </>
