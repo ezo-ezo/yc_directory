@@ -1,33 +1,96 @@
 "use client";
 
-import React from "react";
+import React, { useState, useActionState } from "react";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import MDEditor from "@uiw/react-md-editor";
-import { Textarea } from "./ui/textarea";
-import { Button } from "./ui/button";
+import { Button } from "@/components/ui/button";
 import { Send } from "lucide-react";
+import { formSchema } from "@/lib/validation";
+import { z } from "zod";
+import { useToast } from "@/hooks/use-toast";
+import { useRouter } from "next/navigation";
+// import { createPitch } from "@/lib/actions";
 
 const StartupForm = () => {
-  const [error, setError] = React.useState<Record<string, string>>({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [pitch, setPitch] = useState("");
+  const { toast } = useToast();
+  const router = useRouter();
 
-  const [pitch, setPitch] = React.useState("**Hello world!!!**");
+  const handleFormSubmit = async (prevState: any, formData: FormData) => {
+    try {
+      const formValues = {
+        title: formData.get("title") as string,
+        description: formData.get("description") as string,
+        category: formData.get("category") as string,
+        link: formData.get("link") as string,
+        pitch,
+      };
 
-  const isPending = false;
+      await formSchema.parseAsync(formValues);
+
+      const result = await createPitch(prevState, formData, pitch);
+
+      if (result.status == "SUCCESS") {
+        toast({
+          title: "Success",
+          description: "Your startup pitch has been created successfully",
+        });
+
+        router.push(`/startup/${result._id}`);
+      }
+
+      return result;
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const fieldErorrs = error.flatten().fieldErrors;
+
+        setErrors(fieldErorrs as unknown as Record<string, string>);
+
+        toast({
+          title: "Error",
+          description: "Please check your inputs and try again",
+          variant: "destructive",
+        });
+
+        return { ...prevState, error: "Validation failed", status: "ERROR" };
+      }
+
+      toast({
+        title: "Error",
+        description: "An unexpected error has occurred",
+        variant: "destructive",
+      });
+
+      return {
+        ...prevState,
+        error: "An unexpected error has occurred",
+        status: "ERROR",
+      };
+    }
+  };
+
+  const [state, formAction, isPending] = useActionState(handleFormSubmit, {
+    error: "",
+    status: "INITIAL",
+  });
 
   return (
-    <form action={() => {}} className="startup-form">
+    <form action={formAction} className="startup-form">
       <div>
         <label htmlFor="title" className="startup-form_label">
           Title
         </label>
-        <input
+        <Input
           id="title"
           name="title"
-          placeholder="Startup Title"
-          required
           className="startup-form_input"
+          required
+          placeholder="Startup Title"
         />
 
-        {error.title && <p className="startup-form_error">{error.title}</p>}
+        {errors.title && <p className="startup-form_error">{errors.title}</p>}
       </div>
 
       <div>
@@ -37,13 +100,13 @@ const StartupForm = () => {
         <Textarea
           id="description"
           name="description"
-          placeholder="Startup Description"
-          required
           className="startup-form_textarea"
+          required
+          placeholder="Startup Description"
         />
 
-        {error.description && (
-          <p className="startup-form_error">{error.description}</p>
+        {errors.description && (
+          <p className="startup-form_error">{errors.description}</p>
         )}
       </div>
 
@@ -51,36 +114,36 @@ const StartupForm = () => {
         <label htmlFor="category" className="startup-form_label">
           Category
         </label>
-        <input
+        <Input
           id="category"
           name="category"
-          placeholder="Startup Category (Tech, Health, Finance...)"
-          required
           className="startup-form_input"
+          required
+          placeholder="Startup Category (Tech, Health, Education...)"
         />
 
-        {error.category && (
-          <p className="startup-form_error">{error.category}</p>
+        {errors.category && (
+          <p className="startup-form_error">{errors.category}</p>
         )}
       </div>
 
       <div>
-        <label htmlFor="link " className="startup-form_label">
+        <label htmlFor="link" className="startup-form_label">
           Image URL
         </label>
-        <input
+        <Input
           id="link"
           name="link"
-          placeholder="Image URL"
-          required
           className="startup-form_input"
+          required
+          placeholder="Startup Image URL"
         />
 
-        {error.link && <p className="startup-form_error">{error.link}</p>}
+        {errors.link && <p className="startup-form_error">{errors.link}</p>}
       </div>
 
       <div data-color-mode="light">
-        <label htmlFor="pitch " className="startup-form_label">
+        <label htmlFor="pitch" className="startup-form_label">
           Pitch
         </label>
 
@@ -100,7 +163,7 @@ const StartupForm = () => {
           }}
         />
 
-        {error.pitch && <p className="startup-form_error">{error.pitch}</p>}
+        {errors.pitch && <p className="startup-form_error">{errors.pitch}</p>}
       </div>
 
       <Button
