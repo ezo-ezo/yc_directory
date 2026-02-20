@@ -14,6 +14,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import View from "@/components/View";
 import StartupCard, { StartupTypeCard } from "@/components/StartupCard";
 
+export const dynamic = "force-dynamic";
+
 const md = markdownit();
 
 const Page = async ({ params }: { params: Promise<{ id: string }> }) => {
