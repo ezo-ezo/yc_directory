@@ -1,3 +1,4 @@
+import { unstable_noStore as noStore } from "next/cache";
 import { Suspense } from "react";
 import { client } from "@/sanity/lib/client";
 import {
@@ -14,11 +15,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import View from "@/components/View";
 import StartupCard, { StartupTypeCard } from "@/components/StartupCard";
 
-export const dynamic = "force-dynamic";
 
 const md = markdownit();
 
 const Page = async ({ params }: { params: Promise<{ id: string }> }) => {
+  noStore();
   const id = (await params).id;
 
 const [post, playlist] = await Promise.all([
