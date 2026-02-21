@@ -13,6 +13,34 @@
  */
 
 // Source: sanity\extract.json
+export type StartupReference = {
+  _ref: string;
+  _type: "reference";
+  _weak?: boolean;
+  [internalGroqTypeReferenceTo]?: "startup";
+};
+
+export type Playlist = {
+  _id: string;
+  _type: "playlist";
+  _createdAt: string;
+  _updatedAt: string;
+  _rev: string;
+  title?: string;
+  slug?: Slug;
+  select?: Array<
+    {
+      _key: string;
+    } & StartupReference
+  >;
+};
+
+export type Slug = {
+  _type: "slug";
+  current: string;
+  source?: string;
+};
+
 export type AuthorReference = {
   _ref: string;
   _type: "reference";
@@ -34,12 +62,6 @@ export type Startup = {
   category: string;
   image: string;
   pitch?: string;
-};
-
-export type Slug = {
-  _type: "slug";
-  current: string;
-  source?: string;
 };
 
 export type Author = {
@@ -169,9 +191,11 @@ export type Geopoint = {
 };
 
 export type AllSanitySchemaTypes =
+  | StartupReference
+  | Playlist
+  | Slug
   | AuthorReference
   | Startup
-  | Slug
   | Author
   | SanityImagePaletteSwatch
   | SanityImagePalette
@@ -190,6 +214,17 @@ export declare const internalGroqTypeReferenceTo: unique symbol;
 // Variable: STARTUPS_QUERY
 // Query: *[_type == "startup" && defined(slug.current) && !defined($search) || title match $search || category match $search || author->name match $search] | order(_createdAt desc) {  _id,   title,   slug,  _createdAt,  author -> {    _id, name, image, bio  },   views,  description,  category,  image,}
 export type STARTUPS_QUERY_RESULT = Array<
+  | {
+      _id: string;
+      title: string | null;
+      slug: Slug | null;
+      _createdAt: string;
+      author: null;
+      views: null;
+      description: null;
+      category: null;
+      image: null;
+    }
   | {
       _id: string;
       title: null;
@@ -309,7 +344,29 @@ export type STARTUPS_BY_AUTHOR_QUERY_RESULT = Array<{
 // Source: sanity\lib\queries.ts
 // Variable: PLAYLIST_BY_SLUG_QUERY
 // Query: *[_type == "playlist" && slug.current == $slug][0]{  _id,  title,  slug,  select[]->{    _id,    _createdAt,    title,    slug,    author->{      _id,      name,      slug,      image,      bio    },    views,    description,    category,    image,    pitch  }}
-export type PLAYLIST_BY_SLUG_QUERY_RESULT = null;
+export type PLAYLIST_BY_SLUG_QUERY_RESULT = {
+  _id: string;
+  title: string | null;
+  slug: Slug | null;
+  select: Array<{
+    _id: string;
+    _createdAt: string;
+    title: string | null;
+    slug: Slug | null;
+    author: {
+      _id: string;
+      name: string | null;
+      slug: null;
+      image: string | null;
+      bio: string | null;
+    } | null;
+    views: number | null;
+    description: string | null;
+    category: string;
+    image: string;
+    pitch: string | null;
+  }> | null;
+} | null;
 
 // Query TypeMap
 import "@sanity/client";
